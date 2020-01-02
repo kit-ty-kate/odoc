@@ -84,10 +84,21 @@ and visibility : Types.visibility -> visibility = function
   | Types.Hidden -> Hidden
   | Types.Exported -> Exported
 
+#if OCAML_VERSION >= (4, 10, 0)
+and map_functor_param = function (* TODO: do better *)
+  | Types.Unit -> (Ident.create_local "*", None)
+  | Types.Named (Some s, mt) -> (s, Some (module_type mt))
+  | Types.Named (None, mt) -> (Ident.create_local "_", Some (module_type mt))
+#endif
+
 and module_type : Types.module_type -> module_type = function
   | Types.Mty_ident p -> Mty_ident p
   | Types.Mty_signature s -> Mty_signature (signature s)
+#if OCAML_VERSION >= (4, 10, 0)
+  | Types.Mty_functor (param, c) -> let (a, b) = map_functor_param param in Mty_functor(a, b, module_type c)
+#else
   | Types.Mty_functor (a, b, c) -> Mty_functor(a, opt module_type b, module_type c)
+#endif
   | Types.Mty_alias p -> Mty_alias p
 
 and module_presence : Types.module_presence -> module_presence = function

@@ -477,6 +477,7 @@ and read_module_type env parent label_parent pos mty =
     match mty.mty_desc with
     | Tmty_ident(p, _) -> Path (Env.Path.read_module_type env p)
     | Tmty_signature sg -> Signature (read_signature env parent sg)
+#if OCAML_VERSION < (4, 10, 0)
     | Tmty_functor(id, _, arg, res) ->
         let arg =
           match arg with
@@ -495,6 +496,10 @@ and read_module_type env parent label_parent pos mty =
         let env = Env.add_argument parent pos id (ArgumentName.of_ident id) env in
       let res = read_module_type env parent label_parent (pos + 1) res in
           Functor(arg, res)
+#else
+    | Tmty_functor(arg, res) ->
+        assert false (* TODO *)
+#endif
     | Tmty_with(body, subs) ->
       let body = read_module_type env parent label_parent pos body in
       let subs = List.map (read_with_constraint env label_parent) subs in
@@ -529,8 +534,12 @@ and read_module_type_declaration env parent mtd =
 
 and read_module_declaration env parent md =
   let open Module in
+#if OCAML_VERSION < (4, 10, 0)
   let name = parenthesise (Ident.name md.md_id) in
   let id = `Module(parent, Odoc_model.Names.ModuleName.of_string name) in
+#else
+  let id = assert false in (* TODO *)
+#endif
   let container = (parent : Identifier.Signature.t :> Identifier.LabelParent.t) in
   let doc = Doc_attr.attached container md.md_attributes in
   let canonical =
@@ -548,7 +557,13 @@ and read_module_declaration env parent md =
   let hidden =
     match canonical with
     | Some _ -> false
-    | None -> Odoc_model.Root.contains_double_underscore (Ident.name md.md_id)
+    | None ->
+#if OCAML_VERSION >= (4, 10, 0)
+      match md.md_id with None -> false | Some id ->
+#else
+      let id = md.md_id in
+#endif
+      Odoc_model.Root.contains_double_underscore (Ident.name id)
   in
   let expansion =
     match type_ with

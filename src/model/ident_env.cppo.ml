@@ -50,6 +50,15 @@ let add_module parent id name env =
   let modules = Ident.add id module_ env.modules in
     { env with modules }
 
+let add_module_opt parent id env =
+#if OCAML_VERSION < (4, 10, 0)
+  add_module parent id (ModuleName.of_ident id) env
+#else
+  match id with
+  | Some id -> add_module parent id (ModuleName.of_ident id) env
+  | None -> env
+#endif
+
 let add_argument parent arg id name env =
   let ident = `Identifier (`Argument(parent, arg, name)) in
   let module_ = if ArgumentName.is_hidden name then `Hidden ident else ident in
@@ -186,10 +195,10 @@ let add_signature_tree_item parent item env =
           (fun decl env -> add_type parent decl.typ_id (TypeName.of_ident decl.typ_id) env)
           decls env
     | Tsig_module md ->
-        add_module parent md.md_id (ModuleName.of_ident md.md_id) env
+        add_module_opt parent md.md_id env
     | Tsig_recmodule mds ->
         List.fold_right
-          (fun md env -> add_module parent md.md_id (ModuleName.of_ident md.md_id) env)
+          (fun md env -> add_module_opt parent md.md_id env)
           mds env
     | Tsig_modtype mtd ->
         add_module_type parent mtd.mtd_id (ModuleTypeName.of_ident mtd.mtd_id) env
@@ -250,10 +259,10 @@ let add_structure_tree_item parent item env =
         List.fold_right
           (fun decl env -> add_type parent decl.typ_id (TypeName.of_ident decl.typ_id) env)
           decls env
-    | Tstr_module mb -> add_module parent mb.mb_id (ModuleName.of_ident mb.mb_id) env
+    | Tstr_module mb -> add_module_opt parent mb.mb_id env
     | Tstr_recmodule mbs ->
         List.fold_right
-          (fun mb env -> add_module parent mb.mb_id (ModuleName.of_ident mb.mb_id) env)
+          (fun mb env -> add_module_opt parent mb.mb_id env)
           mbs env
     | Tstr_modtype mtd ->
         add_module_type parent mtd.mtd_id (ModuleTypeName.of_ident mtd.mtd_id) env
@@ -297,7 +306,7 @@ let add_structure_tree_item parent item env =
 #endif
     | Tstr_eval _ | Tstr_value _
     | Tstr_primitive _ | Tstr_typext _
-    | Tstr_exception _ 
+    | Tstr_exception _
     | Tstr_attribute _ -> env
 
 let add_structure_tree_items parent str env =
