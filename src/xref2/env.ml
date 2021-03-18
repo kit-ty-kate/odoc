@@ -223,7 +223,7 @@ let add_type identifier t env =
   }
   |> List.fold_right (add_cdocs identifier) (t.doc :: docs)
 
-let add_module_type identifier t env =
+let add_module_type identifier (t:Component.ModuleType.t) env =
   {
     env with
     id =
@@ -237,7 +237,7 @@ let add_module_type identifier t env =
   }
   |> add_cdocs identifier t.doc
 
-let add_value identifier t env =
+let add_value identifier (t:Component.Value.t) env =
   {
     env with
     id =
@@ -251,7 +251,7 @@ let add_value identifier t env =
   }
   |> add_cdocs identifier t.doc
 
-let add_external identifier t env =
+let add_external identifier (t:Component.External.t) env =
   {
     env with
     id =
@@ -265,7 +265,7 @@ let add_external identifier t env =
   }
   |> add_cdocs identifier t.doc
 
-let add_class identifier t env =
+let add_class identifier (t:Component.Class.t) env =
   {
     env with
     id =
@@ -279,7 +279,7 @@ let add_class identifier t env =
   }
   |> add_cdocs identifier t.doc
 
-let add_class_type identifier t env =
+let add_class_type identifier (t:Component.ClassType.t) env =
   {
     env with
     id =
@@ -297,7 +297,7 @@ let add_method _identifier _t env =
   (* TODO *)
   env
 
-let add_exception identifier e env =
+let add_exception identifier (e:Component.Exception.t) env =
   {
     env with
     id =
@@ -311,7 +311,7 @@ let add_exception identifier e env =
   }
   |> add_cdocs identifier e.doc
 
-let add_extension_constructor identifier ec env =
+let add_extension_constructor identifier (ec:Component.Extension.Constructor.t) env =
   {
     env with
     id =
